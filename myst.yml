@@ -1,0 +1,36 @@
+version: 1
+
+project:
+  title: NGSTrefftz
+  toc:
+    - pattern: chapters/*.md
+  exclude:
+    - '**/*.py'
+    - old/**
+    - scratch/**
+    - notebooks/**
+    - examples/private/**
+    - useful_code/**
+    - 'env/**'
+    - '**/.ipynb_checkpoints/**'
+    - '**/__pycache__/**'
+    - '**/*.pyc'
+    - '**/tikz/**'
+
+  #jupyter:
+    #kernelName: ngsolve-book
+    #server:
+      #url: http://localhost:8888/
+      #token: myst-local-token
+  jupyter:
+    kernelName: python3
+    server:
+      url: http://127.0.0.1:8888/
+      token: myst-local
+
+site:
+  template: book-theme
+  options:
+    hide_outline: true
+    #hide_toc: true
+    style: ./custom.css

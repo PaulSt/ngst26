@@ -1,0 +1,13 @@
+_build/
+.venv/
+.jupyter_cache/
+.jupyter-local/
+.jupyter-live.log
+notebooks/
+chapters/*.ipynb
+**/.ipynb_checkpoints/
+**/__pycache__/
+_static/tikz/*.aux
+_static/tikz/*.log
+_static/tikz/*.out
+_static/tikz/*.pdf

@@ -1,0 +1,4 @@
+/* Remove the top navigation/header bar */
+.myst-top-nav {
+  display: none !important;
+}

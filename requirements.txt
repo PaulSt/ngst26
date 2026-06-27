@@ -1,0 +1,14 @@
+jupyter-book
+jupyterlab
+myst-nb
+sphinx-copybutton
+jupytext
+jupyter
+webgui-jupyter-widgets
+anywidget
+numpy 
+scipy
+matplotlib
+pymetis
+#ngsolve 
+ngstrefftz>=0.3.2603
