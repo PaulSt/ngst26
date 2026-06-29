@@ -15,6 +15,8 @@ kernelspec:
 
 Trefftz methods build local approximation spaces from functions that already
 satisfy the PDE on each element. 
+
+## Laplace: Classical Trefftz-DG
 For the Laplace equation this means harmonic polynomials,
 
 $$
@@ -49,10 +51,9 @@ import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
 Lap = lambda u: sum(Trace(u.Operator("hesse")))
-mesh = Mesh(unit_square.GenerateMesh(maxh=0.1))
+mesh = Mesh(unit_square.GenerateMesh(maxh=0.2))
 ```
 
-## Laplace: Classical Trefftz-DG
 
 The NGSTrefftz constructor receives the mesh, polynomial order, and the
 equation key:
@@ -68,6 +69,12 @@ fes = trefftzfespace(
 
 print(f"Trefftz dofs: {fes.ndof}")
 print(f"Full polynomial dofs: {L2(mesh,order=order).ndof}")
+
+up = GridFunction(fes, multidim=fes.ndof)
+for i, vec in enumerate(up.vecs):
+    vec.data[:] = 0
+    vec.data[i] = 1
+Draw(up,mesh,"basis",animate=True,interpolate_multidim=False,min=-.1, max=.1, deformation=True, scale=1, euler_angles=[-70,0.4,2],)
 ```
 
 The formulation used below is the symmetric interior penalty DG method. 
@@ -238,26 +245,14 @@ def dghelmholtz(fes, test_fes, omega, bndc):
 ```
 
 ```{code-cell} ipython3
-omega = 8
+omega = 5
 exact = exp(1j * omega * (1 / sqrt(2) * (x + y)))
 grad_exact = CF((1j * omega / sqrt(2) * exact,1j * omega / sqrt(2) * exact))
 n = specialcf.normal(2)
 bndc = grad_exact * n + 1j * omega * exact
 
-fes = trefftzfespace(
-    mesh,
-    order=5,
-    eq="helmholtz",
-    complex=True,
-    dgjumps=True,
-)
-fes_test = trefftzfespace(
-    mesh,
-    order=5,
-    eq="helmholtzconj",
-    complex=True,
-    dgjumps=True,
-)
+fes = trefftzfespace( mesh, order=5, eq="helmholtz", complex=True, dgjumps=True,)
+fes_test = trefftzfespace( mesh, order=5, eq="helmholtzconj", complex=True, dgjumps=True,)
 
 a, f = dghelmholtz(fes, fes_test, omega, bndc)
 gfu = GridFunction(fes)

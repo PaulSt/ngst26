@@ -373,18 +373,9 @@ shape.edges.Min(Y).name = "obnd"
 shape.edges.Max(Y).name = "obnd"
 dbnd = "dirichlet"
 elements_per_wavelength = 6
-omega = 80
+omega = 50
 maxh = 2.0 * math.pi / (omega * elements_per_wavelength)
 mesh = Mesh(OCCGeometry(shape, dim=2).GenerateMesh(maxh=maxh))
-Draw(mesh)
-```
-
-We can also apply the same sweeping idea to a DG method:
-
-```{code-cell} ipython3
-:tags: [hide-input]
-
-%%time
 fes = L2(mesh, order=order, dgjumps=True,complex=True)
 a,f = DGHelmholtz(fes, omega, ibnd="ibnd", obnd=".*", dbnd="dirichlet", ibndc= -10.0j * exp(-20.0 * (2.0 * y - 1.0) ** 2))
 with TaskManager():
@@ -396,14 +387,13 @@ with TaskManager():
     for i in range(50):
         sweep.Sweep(f.vec, gfu.vec)
         residuals2.append(Norm(a.mat * gfu.vec - f.vec))
+    Draw(gfu)
 ```
 
 embedded Trefftz DG sweep:
 
 ```{code-cell} ipython3
 :tags: [hide-input]
-
-%%time
 basefes = L2(mesh, order=order, dgjumps=True,complex=True)
 test_fes = L2(mesh, order=order-2, dgjumps=True,complex=True)
 u,v = basefes.TnT()
@@ -424,18 +414,8 @@ with TaskManager():
         sweep.Sweep(f.vec, gfu.vec)
         residuals.append(Norm(a.mat * gfu.vec - f.vec))
     Draw(emb.Embed(gfu))
-```
-
-Basic GMRes for embedded Trefftz:
-
-```{code-cell} ipython3
-:tags: [hide-input]
-
-from ngsolve.krylovspace import GMResSolver
-gfu = GridFunction(fes)
-gmr = GMResSolver(a.mat,pre=localpre,maxiter=50)
-gfu.vec.data = gmr * f.vec
-Draw(emb.Embed(gfu))
+    gfu.vec.data = a.mat.Inverse()*f.vec
+    Draw(emb.Embed(gfu))
 ```
 
 ```{code-cell} ipython3
@@ -443,7 +423,6 @@ Draw(emb.Embed(gfu))
 
 import matplotlib.pyplot as plt
 plt.semilogy(range(1, len(residuals) + 1), residuals, label="Trefftz sweep")
-plt.semilogy(range(1, len(gmr.residuals) + 1), gmr.residuals, label="Trefftz gmres")
 plt.semilogy(range(1, len(residuals2) + 1), residuals2, label="DG")
 plt.xlabel("Sweeps")
 plt.ylabel("Residual")

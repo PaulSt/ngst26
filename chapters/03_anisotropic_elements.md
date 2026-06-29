@@ -104,7 +104,7 @@ For Laplace, $V_h^p(K)=\mathbb P^p(K)$ and $Q_h(K)=\mathbb P^{p-2}(K)$ recover h
 On the element $\widetilde K=\widetilde K_1\times\widetilde K_2$, the TP0 tests vanish on the two long edges
 
 $$
-\mathbb L_h(\widetilde K)
+Q_h(\widetilde K)
 =
 \{\widetilde q_h\in \mathbb P^p_\otimes(\widetilde K):
 \widetilde q_h|_{\partial\widetilde K_1\times \widetilde K_2}=0\}.

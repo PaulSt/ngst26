@@ -206,7 +206,7 @@ for i, vec in enumerate(up.vecs):
 Draw(up,mesh,"basis",animate=True,interpolate_multidim=False,min=-1, max=1, deformation=True, scale=.3, euler_angles=[-70,0.4,2],)
 ```
 
-## Same DG Form, Smaller Space
+## Setting up the global embedded DG system
 
 We can use again the standard SIPDG
 
