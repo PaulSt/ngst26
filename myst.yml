@@ -33,4 +33,5 @@ site:
   options:
     hide_outline: true
     #hide_toc: true
+    favicon: ./favicon.svg
     style: ./custom.css

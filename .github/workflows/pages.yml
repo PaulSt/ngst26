@@ -1,0 +1,174 @@
+name: Build and deploy Jupyter Book
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Compute Pages base path
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          base="/${repo_name}"
+          if [ "${repo_name}" = "${GITHUB_REPOSITORY_OWNER}.github.io" ]; then
+            base=""
+          fi
+          {
+            echo "BASE_URL=${base}"
+            echo "WEBGUI_BASE=${base}"
+            echo "WEBGUI_SCENE_DIR=${GITHUB_WORKSPACE}/webgui_scenes"
+            echo "MPLBACKEND=Agg"
+          } >> "${GITHUB_ENV}"
+
+      - name: Restore book cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            _build
+            webgui_scenes
+          key: book-${{ runner.os }}-${{ hashFiles('requirements.txt', 'myst.yml', 'ngsolve_book.py', '.github/workflows/pages.yml') }}-${{ hashFiles('chapters/**') }}
+          restore-keys: |
+            book-${{ runner.os }}-${{ hashFiles('requirements.txt', 'myst.yml', 'ngsolve_book.py', '.github/workflows/pages.yml') }}-
+
+      - name: Install system packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            chromium \
+            libgomp1 \
+            libglu1-mesa \
+            libgl1 \
+            libglx-mesa0 \
+            libgl1-mesa-dri \
+            libxrender1 \
+            xvfb
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+
+      - name: Install Python packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --no-cache-dir ngsolve==6.2.2606
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -m pip install --no-cache-dir jupyter-book==2.1.5 pillow
+          python -m ipykernel install --sys-prefix --name python3 --display-name "Python 3"
+
+      - name: Build executed Jupyter Book
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${WEBGUI_SCENE_DIR}"
+          export PYTHONPATH="${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}/chapters${PYTHONPATH:+:${PYTHONPATH}}"
+
+          python -m jupyter server \
+            --no-browser \
+            --ip=127.0.0.1 \
+            --port=8888 \
+            --ServerApp.root_dir="${GITHUB_WORKSPACE}" \
+            --IdentityProvider.token=myst-local \
+            --ServerApp.disable_check_xsrf=True \
+            > jupyterlog.txt 2>&1 &
+          jupyter_pid="$!"
+
+          cleanup() {
+            kill "${jupyter_pid}" 2>/dev/null || true
+            wait "${jupyter_pid}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=0
+          for _ in $(seq 1 90); do
+            if python -c "import socket; socket.create_connection(('127.0.0.1', 8888), 2).close()" 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "${ready}" -ne 1 ]; then
+            cat jupyterlog.txt
+            exit 1
+          fi
+
+          export JUPYTER_BASE_URL="http://127.0.0.1:8888"
+          export JUPYTER_TOKEN="myst-local"
+          python -m jupyter book build --execute --execute-parallel 1 --html --ci
+
+      - name: Prepare Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf public
+
+          if [ -d _build/html ]; then
+            mkdir -p public
+            cp -a _build/html/. public/
+          else
+            echo "No _build/html directory was produced. Build outputs:"
+            find _build -maxdepth 3 -type d -print
+            exit 1
+          fi
+
+          if [ -d webgui_scenes ]; then
+            mkdir -p public/webgui_scenes
+            cp -a webgui_scenes/. public/webgui_scenes/
+          fi
+
+          touch public/.nojekyll
+          printf '%s\n' "${GITHUB_SHA}" > public/commithash.txt
+          du -sh public
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

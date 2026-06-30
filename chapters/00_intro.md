@@ -15,15 +15,18 @@ kernelspec:
 
  ### [Trefftz Workshop](https://trefftz2026.univie.ac.at/) 7-9 September 2026 · Vienna, Austria
 
-This book is a demo for Trefftz and embedded Trefftz methods in NGSolve/NGSTrefftz. 
-The package provides implementations of
-* several Trefftz spaces and quasi-Trefftz spaces
-* Trefftz-DG on tent-pitched meshes for the acoustic wave equation using [ngstents](https://github.com/jayggg/ngstents)
-* Embedded Trefftz method
-
-**Follow along:** https://github.com/PaulSt/ngst26
+**https://trefftz2026.univie.ac.at/**
 
 ## Overview
+
+This book is a demo for Trefftz and embedded Trefftz methods in NGSolve/NGSTrefftz. 
+The package provides implementations of
+* Trefftz spaces and quasi-Trefftz spaces for several PDEs
+* Trefftz-DG on tent-pitched meshes for the acoustic wave equation using [ngstents](https://github.com/jayggg/ngstents)
+* Embedded Trefftz method
+* Constraint-defined finite element spaces as in [ngstSpaceKit](https://johann-cm.codeberg.page/ngstspacekit)
+
+**Follow along:** https://github.com/PaulSt/ngst26
 
 We focus the examples on results from the recent publications:
 

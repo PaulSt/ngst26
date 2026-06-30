@@ -107,7 +107,6 @@ def SolveOseen(mesh,k,nu,rhs=None,wn=None,trefftz=True,ubnd=None,bndname=".*",in
 
     if inletname is None:
         inletname = bndname
-    solver = "pardiso"
     stab = 1e-7
 
     V = VectorL2(mesh, order=k, dgjumps=True)
@@ -191,7 +190,7 @@ def SolveOseen(mesh,k,nu,rhs=None,wn=None,trefftz=True,ubnd=None,bndname=".*",in
     f.Assemble()
 
     gfu = GridFunction(fes)
-    gfu.vec.data = a.mat.Inverse(inverse=solver) * f.vec
+    gfu.vec.data = a.mat.Inverse() * f.vec
 
     if trefftz:
         polygfu = GridFunction(basefes)

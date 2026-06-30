@@ -1,8 +1,11 @@
 _build/
+public/
+webgui_scenes/
 .venv/
 .jupyter_cache/
 .jupyter-local/
 .jupyter-live.log
+jupyterlog.txt
 notebooks/
 chapters/*.ipynb
 **/.ipynb_checkpoints/

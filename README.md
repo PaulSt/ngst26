@@ -20,4 +20,3 @@ python scripts/book_tools.py install
 python scripts/book_tools.py start
 ```
 
-The generated notebooks and local Jupyter state are ignored by git. The original source of the book remains the markdown files in `chapters/`.
